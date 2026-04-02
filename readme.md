@@ -1,4 +1,4 @@
-#pcblearning
+# pcblearning
 A collection of PCB and firmware projects for learning PCB design. Projects are designed to have few components, cheap, yet rich in potential features.
 
 ## minrc1
