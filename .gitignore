@@ -1,0 +1,6 @@
+.DS_Store
+.env
+.history/
+*-backups/
+*.lck
+compile_commands.json
