@@ -1,0 +1,10 @@
+﻿Designator,Footprint,Quantity,Value,LCSC Part #
+BZ1,Buzzer_CUI_CPT-9019S-SMT,1,FUET-9018,
+"C1, C10, C11, C12, C13, C2, C3, C4, C5, C7, C8, C9",0402,12,0.1uF,
+C6,0402,1,10uF,
+"J1, J2",microstepper,2,Conn_01x04,
+J4,PinHeader_1x02_P2.54mm_Vertical,1,Switch,
+"MK1, MK2, MK3",MIC_T3902,3,T3902,
+"R1, R2",0402,2,10k,
+"U1, U2, U4, U5",WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm,4,DRV8837D,C39159
+U3,esp32s3-supermini,1,ESP32S3,

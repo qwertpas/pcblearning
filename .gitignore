@@ -4,3 +4,4 @@
 *-backups/
 *.lck
 compile_commands.json
+backups/

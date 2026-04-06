@@ -341,7 +341,7 @@
 			)
 		)
 		(property "Value" "ESP32S3"
-			(at -8.89 -1.27 0)
+			(at 0 -47.244 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -351,7 +351,7 @@
 			)
 		)
 		(property "Footprint" "minirc1:esp32s3-supermini"
-			(at -8.89 -1.27 0)
+			(at 0.508 -49.53 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(hide yes)

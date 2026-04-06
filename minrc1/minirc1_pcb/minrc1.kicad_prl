@@ -1,8 +1,8 @@
 {
   "board": {
-    "active_layer": 25,
+    "active_layer": 2,
     "active_layer_preset": "",
-    "auto_track_width": true,
+    "auto_track_width": false,
     "hidden_netclasses": [],
     "hidden_nets": [],
     "high_contrast_mode": 0,
@@ -47,13 +47,12 @@
       "zones",
       "drc_warnings",
       "drc_exclusions",
-      "locked_item_shadows",
       "conflict_shadows",
       "shapes",
       "board_outline_area",
       "ly_points"
     ],
-    "visible_layers": "ffffffff_ffffffff_fffffff5_ffffffff",
+    "visible_layers": "ffffffff_ffffffff_ffffff75_ffffffff",
     "zone_display_mode": 0
   },
   "git": {
