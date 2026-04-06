@@ -23,7 +23,7 @@
       "keepouts": true,
       "lockedItems": false,
       "otherItems": true,
-      "pads": false,
+      "pads": true,
       "text": true,
       "tracks": true,
       "vias": true,
@@ -32,7 +32,6 @@
     "visible_items": [
       "vias",
       "footprint_text",
-      "footprint_anchors",
       "ratsnest",
       "grid",
       "footprints_front",
@@ -49,8 +48,7 @@
       "drc_exclusions",
       "conflict_shadows",
       "shapes",
-      "board_outline_area",
-      "ly_points"
+      "board_outline_area"
     ],
     "visible_layers": "ffffffff_ffffffff_ffffff75_ffffffff",
     "zone_display_mode": 0
