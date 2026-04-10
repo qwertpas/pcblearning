@@ -1,0 +1,464 @@
+(footprint "ESP32-S3-SUPERMINI"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Through hole straight socket strip, 1x09, 2.54mm pitch, single row (from Kicad 4.0.7), script generated")
+	(tags "Through hole socket strip THT 1x09 2.54mm single row")
+	(property "Reference" "REF**"
+		(at -6.096 -2.77 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "239c436c-3014-4ee5-a5ec-6750fe9241b3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "esp32s3-supermini"
+		(at 0 23.09 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "dfaac7ca-39c4-45dc-a49c-fa693f2a362f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "06f939e4-a814-47c2-b6ce-79043df2d99f")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2e16bd0a-df35-43a9-97ac-c873538ae83d")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "KiLib_Generator" "connector/pin_header_socket"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "e4622471-fb61-4a3a-ac4d-118ed6285f03")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -9.05 -1.74)
+		(end 9.05 22.06)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "d3a2e799-513a-4f1d-9731-f63e362e43a9")
+	)
+	(fp_rect
+		(start -4.425 -3.24)
+		(end 4.425 5.76)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "5b836b47-c6a4-4db4-8e13-f3c605b1c9d4")
+	)
+	(pad "1" thru_hole custom
+		(at -7.62 0)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(thermal_bridge_angle 90)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.907039 -0.7527)
+				(end -0.002039 0.7473)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "57b7176a-483e-4894-be3c-fbcbf8fb5da6")
+	)
+	(pad "2" thru_hole custom
+		(at -7.62 2.54)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "25be922f-fdc2-4c33-9575-8634838c5339")
+	)
+	(pad "3" thru_hole custom
+		(at -7.62 5.08)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "9f1af5bb-5195-4e9f-afcc-be15033d4a2b")
+	)
+	(pad "4" thru_hole custom
+		(at -7.62 7.62)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "f2a22dde-d89c-4a41-9b38-ee8f8a485d3c")
+	)
+	(pad "5" thru_hole custom
+		(at -7.62 10.16)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "3aab26a9-d312-4c22-87d5-165dfab8a5eb")
+	)
+	(pad "6" thru_hole custom
+		(at -7.62 12.7)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "941c89d2-86ed-4476-9e01-eca1c5277c51")
+	)
+	(pad "7" thru_hole custom
+		(at -7.62 15.24)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "ce6a6cf8-395e-42cf-bab5-656945d48beb")
+	)
+	(pad "8" thru_hole custom
+		(at -7.62 17.78)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "a111df8d-7f58-4178-998b-f62bd253b890")
+	)
+	(pad "9" thru_hole custom
+		(at -7.62 20.32)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start -1.905 -0.75)
+				(end 0 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "f4a1f0eb-eed0-4b7f-b66f-f414d4456559")
+	)
+	(pad "10" thru_hole custom
+		(at 7.62 20.32)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "eb3d5abd-b946-42cb-a65e-782794f63657")
+	)
+	(pad "11" thru_hole custom
+		(at 7.62 17.78)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "bb75fcbf-693d-45e2-bfa1-47dcd954c176")
+	)
+	(pad "12" thru_hole custom
+		(at 7.62 15.24)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "cc0c1ffa-2057-47c7-835f-3966010be258")
+	)
+	(pad "13" thru_hole custom
+		(at 7.62 12.7)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "733b76a5-5b7a-46f9-8d06-887159573d0f")
+	)
+	(pad "14" thru_hole custom
+		(at 7.62 10.16)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "74c9d560-8c26-482a-b544-45ed0bb3e57f")
+	)
+	(pad "15" thru_hole custom
+		(at 7.62 7.62)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "73c0bb52-8a3e-4cf5-81a6-e86e7f85cee7")
+	)
+	(pad "16" thru_hole custom
+		(at 7.62 5.08)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "0ae1c639-e34d-4a77-8a95-6de8b45b2faa")
+	)
+	(pad "17" thru_hole custom
+		(at 7.62 2.54)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "d715891d-a9c0-4692-8c9c-32fcd81f1677")
+	)
+	(pad "18" thru_hole custom
+		(at 7.62 0)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(thermal_bridge_angle 90)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_rect
+				(start 0 -0.75)
+				(end 1.905 0.75)
+				(width 0.2)
+				(fill yes)
+			)
+		)
+		(uuid "3e25f948-1b20-47fc-b57c-171df3daf3a3")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/libraries/pcblearning.3dshapes/ESP32-S3-SUPERMINI.step"
+		(offset
+			(xyz -9 -21.9 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -0 -0 -0)
+		)
+	)
+)

@@ -472,7 +472,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "minrc-ref.kicad_pro",
+    "filename": "test.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -599,7 +599,7 @@
       "default_line_thickness": 6.0,
       "default_text_size": 50.0,
       "field_names": [],
-      "hop_over_size_choice": 3,
+      "hop_over_size_choice": 0,
       "intersheets_ref_own_page": false,
       "intersheets_ref_prefix": "",
       "intersheets_ref_short": false,
@@ -627,18 +627,18 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "minrc-ref.kicad_sch",
-        "name": "minrc-ref",
-        "uuid": "386c5ba5-94bf-44ba-8030-4ba7b223d300"
+        "filename": "test.kicad_sch",
+        "name": "test",
+        "uuid": "5749abf3-3c59-4e18-9551-3dab120bd483"
       }
     ],
-    "used_designators": "#PWR1-3,J1,U1-3",
+    "used_designators": "J1",
     "variants": []
   },
   "sheets": [
     [
-      "386c5ba5-94bf-44ba-8030-4ba7b223d300",
-      "minrc-ref"
+      "5749abf3-3c59-4e18-9551-3dab120bd483",
+      "test"
     ]
   ],
   "text_variables": {},

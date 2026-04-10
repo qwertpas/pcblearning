@@ -1,0 +1,126 @@
+(footprint "PM08_stepper_motor"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 4.9 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "5ac98704-5b87-4418-b137-a7ab120360b0")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "microstepper"
+		(at 0 7.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "edabe2a8-ec69-449e-8598-e558febd89dc")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "4ebd6cef-4d42-42e2-93c5-996cda1402b8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "504a0a61-5978-4ee9-a174-50232146e320")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -4.2 -4.05)
+		(end 4.8 4.05)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "345b3b0b-1e36-4613-a758-138d354ea24f")
+	)
+	(fp_rect
+		(start 4.8 -1.4)
+		(end 8.3 1.4)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "e5910710-f876-4fab-814c-6d865ac93261")
+	)
+	(pad "1" thru_hole circle
+		(at 0 -2.25)
+		(size 1.25 1.25)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "b3467319-8378-48eb-8cff-14307a6a5dfc")
+	)
+	(pad "2" thru_hole circle
+		(at 0 -0.75)
+		(size 1.25 1.25)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "86871cb2-0215-4f0f-9cf0-48c32c8761b1")
+	)
+	(pad "3" thru_hole circle
+		(at 0 0.75)
+		(size 1.25 1.25)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "58b21e51-653b-4903-b69e-c3dbadde5203")
+	)
+	(pad "4" thru_hole circle
+		(at 0 2.25)
+		(size 1.25 1.25)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "2c6e849c-97f9-435f-bd4e-92cb4a6e898c")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/libraries/pcblearning.3dshapes/PM08_stepper_motor.step"
+		(offset
+			(xyz -4.2 0 5)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -90 -0 -90)
+		)
+	)
+)
