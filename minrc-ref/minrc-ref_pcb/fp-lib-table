@@ -1,0 +1,5 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "pcblearning") (type "KiCad") (uri "/Users/chris/Kicad/pcblearning/libraries/pcblearning.pretty") (options "") (descr ""))
+	(lib (name "pcblearning") (type "KiCad") (uri "/Users/chris/Kicad/pcblearning/libraries/pcblearning.pretty") (options "") (descr ""))
+)

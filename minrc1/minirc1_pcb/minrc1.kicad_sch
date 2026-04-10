@@ -5480,7 +5480,7 @@
 				(justify bottom)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.mouser.com/pdfDocs/DS-000357-T3902-v10.pdf"
 			(at 62.23 146.05 0)
 			(hide yes)
 			(show_name no)
@@ -5786,7 +5786,7 @@
 				(justify bottom)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.mouser.com/pdfDocs/DS-000357-T3902-v10.pdf"
 			(at 205.74 144.78 0)
 			(hide yes)
 			(show_name no)
@@ -8992,7 +8992,7 @@
 				(justify bottom)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.mouser.com/pdfDocs/DS-000357-T3902-v10.pdf"
 			(at 132.08 144.78 0)
 			(hide yes)
 			(show_name no)

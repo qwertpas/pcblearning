@@ -5,3 +5,4 @@
 *.lck
 compile_commands.json
 backups/
+*.bak
