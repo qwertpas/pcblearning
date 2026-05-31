@@ -1,324 +1,373 @@
 #include <Arduino.h>
-#include <Preferences.h>
 #include <Adafruit_NeoPixel.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+#include <driver/i2s.h>
+#include <esp32-hal-matrix.h>
 
-#include <string>
-
-// Stepper outputs (LEDC channels 0–3)
-constexpr uint8_t pins[] = {43, 44, 1, 2};
-constexpr uint8_t pwmBits = 8;
-constexpr uint16_t pwmMax = (1u << pwmBits) - 1;
-constexpr uint8_t phases[][4] = {
-  {1, 0, 1, 0},
-  {0, 1, 1, 0},
-  {0, 1, 0, 1},
-  {1, 0, 0, 1},
-};
-constexpr uint8_t phaseCount = sizeof(phases) / sizeof(phases[0]);
-
-// One full hue cycle every this many motor steps
-constexpr uint16_t kStepsPerHueCycle = 20;
-
-// WS2812 (from blink.cpp)
+constexpr uint8_t kMicPins[3] = {43, 13, 4};
+constexpr uint8_t kMicClkPin = 5;
+constexpr uint8_t kBuzzerPinPos = 7;
+constexpr uint8_t kBuzzerPinNeg = 6;
 constexpr uint8_t kWs2812Pin = 48;
-constexpr uint16_t kPixelCount = 1;
 
-// Nordic UART service (BLE; works with laptop via bleak)
-constexpr char kBleDeviceName[] = "MinRC1-Stepper";
-constexpr char kUartServiceUuid[] = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
-constexpr char kUartRxUuid[] = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
-constexpr char kUartTxUuid[] = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+constexpr uint8_t kPwmBits = 8;
+constexpr uint16_t kPwmMax = (1u << kPwmBits) - 1;
+constexpr uint8_t kBuzzerChannel = 0;
+constexpr uint32_t kBuzzerFreqHz = 4000;
+constexpr uint32_t kBuzzerPeriodMs = 3000;
+constexpr uint32_t kBuzzerOnMs = 180;
+constexpr uint8_t kMotorBaseChannel = 2;
+constexpr uint32_t kMotorPwmHz = 20000;
+constexpr float kDefaultStepHz = 10.0f;
+constexpr uint8_t kDefaultDutyPercent = 100;
+constexpr uint32_t kSerialBaud = 460800;
+constexpr uint32_t kMicSampleRate = 16000;
+constexpr size_t kPacketSamples = 128;
+constexpr size_t kFlushSamples = 128;
+constexpr uint8_t kFlushReads = 2;
+constexpr uint8_t kPacketsPerMic = 16;
+constexpr uint32_t kPixelCount = 1;
+constexpr char kSync[4] = {'M', 'D', 'A', 'Q'};
+constexpr int8_t kStepTable[4][2] = {
+  {1, 1},
+  {-1, 1},
+  {-1, -1},
+  {1, -1},
+};
 
-// NVS (survives reboot / reflash of app partition)
-constexpr char kPrefsNamespace[] = "stepper";
-constexpr char kPrefsDuty[] = "duty";
-constexpr char kPrefsFreqKhz[] = "fkhz";
-constexpr char kPrefsPeriodMs[] = "pms";
+struct __attribute__((packed)) PacketHeader {
+  char magic[4];
+  uint8_t mic;
+  uint8_t reserved;
+  uint16_t count;
+  uint16_t rateHz;
+};
+
+struct Coil {
+  uint8_t pinPos;
+  uint8_t pinNeg;
+  uint8_t channel;
+};
+
+struct Motor {
+  Coil coilA;
+  Coil coilB;
+};
+
+constexpr Motor kMotors[2] = {
+  {{44, 3, 2}, {1, 2, 3}},
+  {{9, 12, 4}, {10, 11, 5}},
+};
 
 Adafruit_NeoPixel pixels(kPixelCount, kWs2812Pin, NEO_GRB + NEO_KHZ800);
 
-uint32_t stepCount = 0;
-uint8_t phase = 0;
-float pwmDutyPercent = 80.0f;
-float pwmFreqKhz = 20.0f;
-float stepPeriodMs = 10.0f;
+uint8_t motorPhase = 0;
+uint8_t micIndex = 0;
+uint8_t packetsOnMic = 0;
 uint32_t lastStepUs = 0;
-String command;
+uint32_t lastBeepMs = 0;
+bool buzzerOn = false;
+bool buzzerEnabled = true;
+float stepHz = kDefaultStepHz;
+uint8_t dutyPercent = kDefaultDutyPercent;
+char commandBuffer[32];
+size_t commandLen = 0;
 
-BLEServer* bleServer = nullptr;
-BLECharacteristic* bleTxCharacteristic = nullptr;
-bool bleConnected = false;
-bool bleOldConnected = false;
-
-portMUX_TYPE bleCmdMux = portMUX_INITIALIZER_UNLOCKED;
-String bleIncoming;
-
-uint32_t pwmFreqHz() {
-  return static_cast<uint32_t>(pwmFreqKhz * 1000.0f + 0.5f);
+uint8_t dutyValue() {
+  return static_cast<uint8_t>((static_cast<uint32_t>(dutyPercent) * kPwmMax) / 100u);
 }
 
-uint32_t stepPeriodUs() {
-  return static_cast<uint32_t>(stepPeriodMs * 1000.0f + 0.5f);
-}
+void driveCoil(const Coil& coil, int8_t state) {
+  ledcDetachPin(coil.pinPos);
+  ledcDetachPin(coil.pinNeg);
+  digitalWrite(coil.pinPos, LOW);
+  digitalWrite(coil.pinNeg, LOW);
 
-uint32_t pwmDutyValue() {
-  return static_cast<uint32_t>(pwmDutyPercent * pwmMax / 100.0f + 0.5f);
-}
-
-void bleNotify(const String& s) {
-  if (bleTxCharacteristic != nullptr && bleConnected) {
-    bleTxCharacteristic->setValue(s.c_str());
-    bleTxCharacteristic->notify();
-  }
-}
-
-void replyln(const String& line) {
-  Serial.println(line);
-  bleNotify(line + "\n");
-}
-
-void replyBad(const char* msg) {
-  replyln(msg);
-}
-
-void setPhase(uint8_t nextPhase) {
-  const uint32_t duty = pwmDutyValue();
-  for (uint8_t i = 0; i < 4; ++i) {
-    ledcWrite(i, phases[nextPhase][i] ? duty : 0);
-  }
-}
-
-void updateRgbForStep() {
-  const uint32_t s = (stepCount - 1u) % kStepsPerHueCycle;
-  const uint16_t hueNow = static_cast<uint16_t>((s * 65536u) / kStepsPerHueCycle);
-  const uint32_t color = pixels.gamma32(pixels.ColorHSV(hueNow, 255, 255));
-  pixels.setPixelColor(0, color);
-  pixels.show();
-}
-
-void loadStepperPrefs() {
-  Preferences prefs;
-  if (!prefs.begin(kPrefsNamespace, true)) {
-    return;
-  }
-  const float d = prefs.getFloat(kPrefsDuty, pwmDutyPercent);
-  const float f = prefs.getFloat(kPrefsFreqKhz, pwmFreqKhz);
-  const float p = prefs.getFloat(kPrefsPeriodMs, stepPeriodMs);
-  prefs.end();
-
-  if (d >= 0.0f && d <= 100.0f) {
-    pwmDutyPercent = d;
-  }
-  if (f > 0.0f) {
-    pwmFreqKhz = f;
-  }
-  if (p > 0.0f) {
-    stepPeriodMs = p;
-  }
-}
-
-void saveStepperPrefs() {
-  Preferences prefs;
-  if (!prefs.begin(kPrefsNamespace, false)) {
-    return;
-  }
-  prefs.putFloat(kPrefsDuty, pwmDutyPercent);
-  prefs.putFloat(kPrefsFreqKhz, pwmFreqKhz);
-  prefs.putFloat(kPrefsPeriodMs, stepPeriodMs);
-  prefs.end();
-}
-
-void setupPwm() {
-  const uint32_t freqHz = pwmFreqHz();
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    ledcSetup(i, freqHz, pwmBits);
-    ledcAttachPin(pins[i], i);
-  }
-}
-
-void printState() {
-  String line = "duty_pct=" + String(pwmDutyPercent, 2) + " freq_khz=" + String(pwmFreqKhz, 3) +
-                " period_ms=" + String(stepPeriodMs, 3);
-  Serial.println(line);
-  bleNotify(line + "\n");
-}
-
-void applyCommand() {
-  if (command.length() < 2) {
-    command = "";
+  if (state == 0 || dutyPercent == 0) {
     return;
   }
 
-  const char type = command[0];
-  const String valueText = command.substring(1);
-
-  if (type == 'd') {
-    const float value = valueText.toFloat();
-    if (value < 0.0f || value > 100.0f) {
-      replyBad("bad duty");
-    } else {
-      pwmDutyPercent = value;
-      setPhase(phase);
-      saveStepperPrefs();
-      replyln("duty_pct=" + String(pwmDutyPercent, 2));
-    }
-  } else if (type == 'f') {
-    const float value = valueText.toFloat();
-    if (value <= 0.0f) {
-      replyBad("bad freq");
-    } else {
-      pwmFreqKhz = value;
-      setupPwm();
-      setPhase(phase);
-      saveStepperPrefs();
-      replyln("freq_khz=" + String(pwmFreqKhz, 3));
-    }
-  } else if (type == 'p') {
-    const float value = valueText.toFloat();
-    if (value <= 0.0f) {
-      replyBad("bad period");
-    } else {
-      stepPeriodMs = value;
-      saveStepperPrefs();
-      replyln("period_ms=" + String(stepPeriodMs, 3));
-    }
-  } else {
-    replyBad("bad cmd");
+  if (dutyPercent >= 100) {
+    digitalWrite(state > 0 ? coil.pinPos : coil.pinNeg, HIGH);
+    return;
   }
 
-  command = "";
+  const uint8_t activePin = state > 0 ? coil.pinPos : coil.pinNeg;
+  ledcAttachPin(activePin, coil.channel);
+  ledcWrite(coil.channel, dutyValue());
 }
 
-void drainBleIncoming() {
-  String chunk;
-  portENTER_CRITICAL(&bleCmdMux);
-  if (bleIncoming.length() > 0) {
-    chunk = bleIncoming;
-    bleIncoming = "";
-  }
-  portEXIT_CRITICAL(&bleCmdMux);
+void applyMotors() {
+  const bool enabled = stepHz > 0.0f && dutyPercent > 0;
+  const int8_t coilA = enabled ? kStepTable[motorPhase][0] : 0;
+  const int8_t coilB = enabled ? kStepTable[motorPhase][1] : 0;
 
-  for (unsigned i = 0; i < chunk.length(); ++i) {
-    const char c = chunk[i];
-    if (c == '\n' || c == '\r') {
-      applyCommand();
-    } else {
-      command += c;
-    }
+  for (const Motor& motor : kMotors) {
+    driveCoil(motor.coilA, coilA);
+    driveCoil(motor.coilB, coilB);
   }
 }
 
-void readSerialCommands() {
-  while (Serial.available() > 0) {
-    const char c = static_cast<char>(Serial.read());
-
-    if (c == '\n' || c == '\r') {
-      applyCommand();
-      continue;
+void setupMotors() {
+  for (const Motor& motor : kMotors) {
+    for (const Coil& coil : {motor.coilA, motor.coilB}) {
+      pinMode(coil.pinPos, OUTPUT);
+      pinMode(coil.pinNeg, OUTPUT);
+      digitalWrite(coil.pinPos, LOW);
+      digitalWrite(coil.pinNeg, LOW);
+      ledcSetup(coil.channel, kMotorPwmHz, kPwmBits);
+      ledcWrite(coil.channel, dutyValue());
     }
+  }
+  applyMotors();
+}
 
-    command += c;
+void setupBuzzer() {
+  ledcSetup(kBuzzerChannel, kBuzzerFreqHz, kPwmBits);
+  ledcAttachPin(kBuzzerPinPos, kBuzzerChannel);
+  pinMode(kBuzzerPinNeg, OUTPUT);
+  ledcWrite(kBuzzerChannel, 0);
+  digitalWrite(kBuzzerPinNeg, LOW);
+}
+
+void stopBuzzer() {
+  buzzerOn = false;
+  ledcWrite(kBuzzerChannel, 0);
+  pinMatrixOutDetach(kBuzzerPinNeg, false, false);
+  digitalWrite(kBuzzerPinNeg, LOW);
+}
+
+void updateBuzzer() {
+  const uint32_t nowMs = millis();
+
+  if (!buzzerEnabled) {
+    stopBuzzer();
+    return;
+  }
+
+  if (!buzzerOn && nowMs - lastBeepMs >= kBuzzerPeriodMs) {
+    lastBeepMs = nowMs;
+    buzzerOn = true;
+    pinMatrixOutAttach(kBuzzerPinNeg, LEDC_LS_SIG_OUT0_IDX + kBuzzerChannel, true, false);
+    ledcWrite(kBuzzerChannel, kPwmMax / 2);
+  }
+
+  if (buzzerOn && nowMs - lastBeepMs >= kBuzzerOnMs) {
+    stopBuzzer();
   }
 }
 
-class BleServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* /* p */) override { bleConnected = true; }
-
-  void onDisconnect(BLEServer* p) override {
-    bleConnected = false;
-    p->getAdvertising()->start();
+void stepMotors() {
+  if (stepHz <= 0.0f || dutyPercent == 0) {
+    return;
   }
-};
 
-class BleRxCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic* characteristic) override {
-    const std::string rxValue = characteristic->getValue();
-    if (rxValue.empty()) {
-      return;
-    }
-    portENTER_CRITICAL(&bleCmdMux);
-    for (char c : rxValue) {
-      bleIncoming += c;
-    }
-    portEXIT_CRITICAL(&bleCmdMux);
-  }
-};
-
-void setupBle() {
-  BLEDevice::init(kBleDeviceName);
-  bleServer = BLEDevice::createServer();
-  bleServer->setCallbacks(new BleServerCallbacks());
-
-  BLEService* service = bleServer->createService(kUartServiceUuid);
-
-  BLECharacteristic* rxChar = service->createCharacteristic(
-    kUartRxUuid,
-    BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
-  rxChar->setCallbacks(new BleRxCallbacks());
-
-  bleTxCharacteristic = service->createCharacteristic(
-    kUartTxUuid,
-    BLECharacteristic::PROPERTY_NOTIFY);
-  bleTxCharacteristic->addDescriptor(new BLE2902());
-
-  service->start();
-
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
-  adv->addServiceUUID(kUartServiceUuid);
-  adv->setScanResponse(true);
-  adv->setMinPreferred(0x06);
-  adv->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-
-  Serial.println("BLE Nordic UART advertising as \"" + String(kBleDeviceName) + "\"");
-}
-
-void setup() {
-  Serial.begin(115200);
-  
-  delay(100);
-
-  pixels.begin();
-  pixels.setBrightness(64);
-  pixels.setPixelColor(0, pixels.gamma32(pixels.ColorHSV(0, 255, 255)));
-  pixels.show();
-
-  loadStepperPrefs();
-  setupPwm();
-  setPhase(phase);
-  printState();
-
-  setupBle();
-}
-
-void loop() {
-  readSerialCommands();
-  drainBleIncoming();
-
-  if (!bleConnected && bleOldConnected) {
-    delay(500);
-    bleServer->startAdvertising();
-    Serial.println("BLE start advertising");
-    bleOldConnected = bleConnected;
-  }
-  if (bleConnected && !bleOldConnected) {
-    bleOldConnected = bleConnected;
+  const uint32_t periodUs = static_cast<uint32_t>(1000000.0f / stepHz);
+  if (periodUs == 0) {
+    return;
   }
 
   const uint32_t nowUs = micros();
-  if (nowUs - lastStepUs < stepPeriodUs()) {
+  if (nowUs - lastStepUs < periodUs) {
     return;
   }
 
   lastStepUs = nowUs;
-  setPhase(phase);
-  phase = (phase + 1) % phaseCount;
+  motorPhase = (motorPhase + 1) & 0x03;
+  applyMotors();
 
-  ++stepCount;
-  updateRgbForStep();
+  const uint16_t hue = static_cast<uint16_t>((motorPhase * 65536u) / 4u);
+  pixels.setPixelColor(0, pixels.gamma32(pixels.ColorHSV(hue, 255, 255)));
+  pixels.show();
+}
+
+bool readWords(int16_t* dst, size_t count) {
+  size_t totalBytes = 0;
+  const size_t targetBytes = count * sizeof(int16_t);
+  while (totalBytes < targetBytes) {
+    size_t bytesRead = 0;
+    const esp_err_t err = i2s_read(
+      I2S_NUM_0,
+      reinterpret_cast<uint8_t*>(dst) + totalBytes,
+      targetBytes - totalBytes,
+      &bytesRead,
+      pdMS_TO_TICKS(50));
+    if (err != ESP_OK || bytesRead == 0) {
+      return false;
+    }
+    totalBytes += bytesRead;
+  }
+  return true;
+}
+
+bool selectMicPin(uint8_t pin) {
+  i2s_stop(I2S_NUM_0);
+
+  i2s_pin_config_t pinConfig = {};
+  pinConfig.mck_io_num = I2S_PIN_NO_CHANGE;
+  pinConfig.bck_io_num = I2S_PIN_NO_CHANGE;
+  pinConfig.ws_io_num = kMicClkPin;
+  pinConfig.data_out_num = I2S_PIN_NO_CHANGE;
+  pinConfig.data_in_num = pin;
+
+  if (i2s_set_pin(I2S_NUM_0, &pinConfig) != ESP_OK) {
+    return false;
+  }
+
+  i2s_start(I2S_NUM_0);
+  delay(4);
+
+  int16_t flush[kFlushSamples];
+  for (uint8_t i = 0; i < kFlushReads; ++i) {
+    if (!readWords(flush, kFlushSamples)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool setupMics() {
+  i2s_config_t config = {};
+  config.mode = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM);
+  config.sample_rate = kMicSampleRate;
+  config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
+  config.channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT;
+  config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
+  config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
+  config.dma_buf_count = 4;
+  config.dma_buf_len = 256;
+  config.use_apll = false;
+  config.tx_desc_auto_clear = false;
+  config.fixed_mclk = 0;
+
+  if (i2s_driver_install(I2S_NUM_0, &config, 0, nullptr) != ESP_OK) {
+    return false;
+  }
+  if (i2s_set_clk(I2S_NUM_0, kMicSampleRate, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO) != ESP_OK) {
+    return false;
+  }
+  if (i2s_set_pdm_rx_down_sample(I2S_NUM_0, I2S_PDM_DSR_16S) != ESP_OK) {
+    return false;
+  }
+  return selectMicPin(kMicPins[micIndex]);
+}
+
+bool switchMic(uint8_t nextMicIndex) {
+  micIndex = nextMicIndex;
+  packetsOnMic = 0;
+  return selectMicPin(kMicPins[micIndex]);
+}
+
+void sendPacket(const int16_t* samples, uint8_t mic) {
+  const PacketHeader header = {
+    {kSync[0], kSync[1], kSync[2], kSync[3]},
+    mic,
+    0,
+    static_cast<uint16_t>(kPacketSamples),
+    static_cast<uint16_t>(kMicSampleRate),
+  };
+  Serial.write(reinterpret_cast<const uint8_t*>(&header), sizeof(header));
+  Serial.write(reinterpret_cast<const uint8_t*>(samples), kPacketSamples * sizeof(int16_t));
+}
+
+void applyCommand(const char* line) {
+  if (line[0] == '\0') {
+    return;
+  }
+
+  char* end = nullptr;
+  const float value = strtof(line + 1, &end);
+  if (end == line + 1 && line[0] != 'b' && line[0] != 'B') {
+    return;
+  }
+
+  switch (line[0]) {
+    case 's':
+    case 'S':
+      if (value < 0.0f || value > 200.0f) {
+        return;
+      }
+      stepHz = value;
+      lastStepUs = micros();
+      applyMotors();
+      return;
+    case 'd':
+    case 'D':
+      if (value < 0.0f || value > 100.0f) {
+        return;
+      }
+      dutyPercent = static_cast<uint8_t>(value + 0.5f);
+      applyMotors();
+      return;
+    case 'b':
+    case 'B':
+      buzzerEnabled = line[1] != '0';
+      if (!buzzerEnabled) {
+        stopBuzzer();
+      }
+      return;
+    default:
+      return;
+  }
+}
+
+void readCommands() {
+  while (Serial.available() > 0) {
+    const char ch = static_cast<char>(Serial.read());
+    if (ch == '\r') {
+      continue;
+    }
+    if (ch == '\n') {
+      commandBuffer[commandLen] = '\0';
+      applyCommand(commandBuffer);
+      commandLen = 0;
+      continue;
+    }
+    if (commandLen + 1 < sizeof(commandBuffer)) {
+      commandBuffer[commandLen++] = ch;
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(kSerialBaud);
+  const uint32_t waitStart = millis();
+  while (!Serial && (millis() - waitStart) < 3000) {
+    delay(10);
+  }
+
+  pixels.begin();
+  pixels.setBrightness(32);
+  pixels.setPixelColor(0, pixels.Color(0, 8, 16));
+  pixels.show();
+
+  setupMotors();
+  setupBuzzer();
+
+  if (!setupMics()) {
+    pixels.setPixelColor(0, pixels.Color(32, 0, 0));
+    pixels.show();
+    while (true) {
+      delay(1000);
+    }
+  }
+}
+
+void loop() {
+  static int16_t samples[kPacketSamples];
+
+  readCommands();
+  stepMotors();
+  updateBuzzer();
+
+  if (!readWords(samples, kPacketSamples)) {
+    return;
+  }
+
+  sendPacket(samples, micIndex);
+
+  ++packetsOnMic;
+  if (packetsOnMic >= kPacketsPerMic) {
+    switchMic((micIndex + 1) % 3);
+  }
 }
